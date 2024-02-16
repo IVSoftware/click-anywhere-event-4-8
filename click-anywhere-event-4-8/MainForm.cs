@@ -15,6 +15,7 @@ namespace click_anywhere_event_4_8
                 Application.RemoveMessageFilter(this);
                 OtherForm.Dispose();
             };
+
             ClickAnywhere += (sender, e) =>
             {
                 if (sender is Control parent)
@@ -34,11 +35,9 @@ namespace click_anywhere_event_4_8
                     richTextBox.AppendText(message);
                 }
             };
+
             buttonShowOther.Click += (sender, e) =>
-            {
-                // Pass 'this' to keep child form on top.
-                OtherForm.Show(this);
-            };
+                OtherForm.Show(this); // Pass 'this' to keep child form on top.
         }
         OtherForm OtherForm = new OtherForm();
 
