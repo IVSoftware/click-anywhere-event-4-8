@@ -15,29 +15,28 @@ namespace click_anywhere_event_4_8
                 Application.RemoveMessageFilter(this);
                 OtherForm.Dispose();
             };
-
             ClickAnywhere += (sender, e) =>
             {
-                if (sender is Control parent)
+                if (sender is Control clickedOn)
                 {
-                    string message;
-                    switch (parent.GetType().Name)
+                    switch (clickedOn?.TopLevelControl?.GetType().Name)
                     {
                         case nameof(MainForm): richTextBox.SelectionColor = Color.Green; break;
                         case nameof(OtherForm): richTextBox.SelectionColor = Color.Blue; break;
                         default: richTextBox.SelectionColor = SystemColors.ControlText; break;
                     }
-                    if (e.Control is Control child)
-                    {
-                        message = $"{parent.Name}.{child.Name}{Environment.NewLine}";
-                    }
-                    else message = $"{parent.Name}{Environment.NewLine}";
+                    string message = $"{clickedOn?.TopLevelControl?.Name}.{clickedOn.Name}{Environment.NewLine}";
                     richTextBox.AppendText(message);
                 }
             };
-
             buttonShowOther.Click += (sender, e) =>
-                OtherForm.Show(this); // Pass 'this' to keep child form on top.
+            {
+                if (!OtherForm.Visible)
+                {
+                    OtherForm.Show(this); // Pass 'this' to keep child form on top.
+                    OtherForm.Location = new Point(Left + 100, Top + 100);
+                }
+            };
         }
         OtherForm OtherForm = new OtherForm();
 
@@ -48,19 +47,11 @@ namespace click_anywhere_event_4_8
             {
                 BeginInvoke((MethodInvoker)delegate
                 {
-                    ClickAnywhere?.Invoke(
-                        control.TopLevelControl,
-                        new ClickAnywhereEventArgs(control));
+                    ClickAnywhere?.Invoke(control, EventArgs.Empty);
                 });
             }
             return false;
         }
-        event EventHandler<ClickAnywhereEventArgs> ClickAnywhere;
-    }
-    delegate void ClickAnywhereEventHandler(Object sender, ClickAnywhereEventArgs e);
-    class ClickAnywhereEventArgs : EventArgs
-    {
-        public ClickAnywhereEventArgs(Control control) => Control = control;
-        public Control Control { get; }
+        public event EventHandler ClickAnywhere;
     }
 }
