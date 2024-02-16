@@ -6,42 +6,44 @@ This answer should work with or without Infragistics. As I understand it, you wa
 
 
 ```
-    public partial class MainForm : Form, IMessageFilter
+public partial class MainForm : Form, IMessageFilter
+{
+    public MainForm()
     {
-        public MainForm()
+        InitializeComponent();
+        Application.AddMessageFilter(this);
+        Disposed += (sender, e) =>
         {
-            InitializeComponent();
-            Application.AddMessageFilter(this);
-            Disposed += (sender, e) =>
+            Application.RemoveMessageFilter(this);
+            OtherForm.Dispose();
+        };
+        ClickAnywhere += (sender, e) =>
+        {
+            if (sender is Control clickedOn)
             {
-                Application.RemoveMessageFilter(this);
-                OtherForm.Dispose();
-            };
-            ClickAnywhere += (sender, e) =>
-            {
-                if (sender is Control clickedOn)
+                switch (clickedOn?.TopLevelControl?.GetType().Name)
                 {
-                    switch (clickedOn?.TopLevelControl?.GetType().Name)
-                    {
-                        case nameof(MainForm): richTextBox.SelectionColor = Color.Green; break;
-                        case nameof(OtherForm): richTextBox.SelectionColor = Color.Blue; break;
-                        default: richTextBox.SelectionColor = SystemColors.ControlText; break;
-                    }
-                    string message = $"{clickedOn?.TopLevelControl?.Name}.{clickedOn.Name}{Environment.NewLine}";
-                    richTextBox.AppendText(message);
+                    case nameof(MainForm): richTextBox.SelectionColor = Color.Green; break;
+                    case nameof(OtherForm): richTextBox.SelectionColor = Color.Blue; break;
+                    default: richTextBox.SelectionColor = SystemColors.ControlText; break;
                 }
-            };
-            buttonShowOther.Click += (sender, e) =>
+                string message = $"{clickedOn?.TopLevelControl?.Name}.{clickedOn.Name}{Environment.NewLine}";
+                richTextBox.AppendText(message);
+            }
+        };
+        buttonShowOther.Click += (sender, e) =>
+        {
+            if (!OtherForm.Visible)
             {
-                if (!OtherForm.Visible)
-                {
-                    OtherForm.Show(this); // Pass 'this' to keep child form on top.
-                    OtherForm.Location = new Point(Left + 100, Top + 100);
-                }
-            };
-        }
-        OtherForm OtherForm = new OtherForm();
+                OtherForm.Show(this); // Pass 'this' to keep child form on top.
+                OtherForm.Location = new Point(Left + 100, Top + 100);
+            }
+        };
+    }
 ```
+
+When you receive the event, look at `sender` to see if it's a match for "the tab".
+___
 
 The implementation of `IMessageFilter` consists of a single method, and here the click "event" (the WM_LBUTTONDOWN _message_) will be detected so that the universal custom event can be raised.
 
@@ -59,6 +61,7 @@ The implementation of `IMessageFilter` consists of a single method, and here the
     }
     public event EventHandler ClickAnywhere;
     private const int WM_LBUTTONDOWN = 0x0201;
+    OtherForm OtherForm = new OtherForm();
 }
 ```
 ___
